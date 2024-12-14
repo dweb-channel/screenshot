@@ -1,101 +1,115 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import PreviewItem from "@/components/preview-item";
+import UploadArea from "@/components/upload-area";
+import LetterPullup from "@/components/ui/letter-pullup";
+
+// 定义图片预览项的接口
+interface PreviewItem {
+  id: string;
+  imageUrl: string;
+  text: string;
+  originalWidth: number;
+  originalHeight: number;
+}
+
+// 获取图片的原始尺寸
+const getImageDimensions = (
+  url: string
+): Promise<{ width: number; height: number }> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      resolve({ width: img.width, height: img.height });
+    };
+    img.src = url;
+  });
+};
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [previewItems, setPreviewItems] = useState<PreviewItem[]>([]);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // 处理文件上传
+  const handleFiles = async (files: FileList) => {
+    const newItems: PreviewItem[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.type.startsWith("image/")) {
+        try {
+          const imageUrl = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(file);
+          });
+
+          // 获取图片原始尺寸
+          const { width, height } = await getImageDimensions(imageUrl);
+
+          newItems.push({
+            id: `${Date.now()}-${i}`,
+            imageUrl,
+            text: "",
+            originalWidth: width,
+            originalHeight: height,
+          });
+        } catch (error) {
+          console.error("读取图片失败:", error);
+        }
+      }
+    }
+
+    setPreviewItems((prev) => [...prev, ...newItems]);
+  };
+
+  // 更新预览项的文字
+  const handleTextChange = (id: string, newText: string) => {
+    setPreviewItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, text: newText } : item))
+    );
+  };
+
+  // 替换图片
+  const handleImageReplace = (
+    id: string,
+    imageUrl: string,
+    width: number,
+    height: number
+  ) => {
+    setPreviewItems((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? { ...item, imageUrl, originalWidth: width, originalHeight: height }
+          : item
+      )
+    );
+  };
+
+  return (
+    <main className="container mx-auto p-4 min-h-screen">
+      <LetterPullup words={"App Store 批量截图生成器"} delay={0.05} />
+
+      <div className="mb-8">
+        <UploadArea onFilesSelected={handleFiles} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {previewItems.map((item) => (
+          <PreviewItem
+            key={item.id}
+            {...item}
+            onTextChange={handleTextChange}
+            onImageReplace={handleImageReplace}
+          />
+        ))}
+      </div>
+
+      {previewItems.length > 0 && (
+        <div className="mt-8 text-center text-gray-500">
+          <p>提示：点击"下载当前"按钮下载单张图片</p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      )}
+    </main>
   );
 }
