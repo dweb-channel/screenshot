@@ -94,7 +94,7 @@ export default function Home() {
         <UploadArea onFilesSelected={handleFiles} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="flex flex-wrap">
         {previewItems.map((item) => (
           <PreviewItem
             key={item.id}

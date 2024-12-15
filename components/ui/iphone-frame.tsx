@@ -30,28 +30,6 @@ export const IPhoneFrame: React.FC<IPhoneFrameProps> = ({
 }) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      {/* 文字部分移到外部 */}
-      {text && (
-        <div
-          style={{
-            width: '100%',
-            textAlign: 'center',
-          }}
-        >
-          <h1
-            style={{
-              fontSize: '60px',
-              fontWeight: 'bold',
-              color: 'black',
-              margin: 0,
-              fontFamily: 'system-ui,-apple-system',
-            }}
-          >
-            {text}
-          </h1>
-        </div>
-      )}
-      
       {/* iPhone 边框部分 */}
       <div
         style={{

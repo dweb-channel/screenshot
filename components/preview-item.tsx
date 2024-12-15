@@ -82,14 +82,7 @@ export default function PreviewItem({
   // 生成并下载当前图片
   const handleDownload = async () => {
     if (!previewRef.current) return;
-
     try {
-      // 计算实际大小的位置和尺寸
-      const { width, height, x, y } = calculateImagePosition(
-        originalWidth,
-        originalHeight
-      );
-
       // 直接使用预览组件生成图片
       const dataUrl = await htmlToImage.toPng(previewRef.current, {
         width: TARGET_WIDTH,
@@ -100,8 +93,8 @@ export default function PreviewItem({
         backgroundColor: "#ffffff",
         style: {
           transform: `scale(${1 / PREVIEW_SCALE})`, // 反向缩放以获得原始大小
-          transformOrigin: 'top left'
-        }
+          transformOrigin: "top left",
+        },
       });
 
       // 下载图片
@@ -115,7 +108,27 @@ export default function PreviewItem({
   };
 
   return (
-    <div className="space-y-4 flex flex-col items-center">
+    <div className="space-y-4 flex flex-col items-center p-4">
+      {text && (
+        <div
+          style={{
+            width: "100%",
+            textAlign: "center",
+          }}
+        >
+          <h1
+            style={{
+              fontSize: "40px",
+              fontWeight: "bold",
+              color: "black",
+              margin: 0,
+              fontFamily: "system-ui,-apple-system",
+            }}
+          >
+            {text}
+          </h1>
+        </div>
+      )}
       {/* iPhone 预览框 */}
       <div
         ref={previewRef}
@@ -128,7 +141,6 @@ export default function PreviewItem({
         <IPhoneFrame
           width={TARGET_WIDTH * PREVIEW_SCALE}
           height={TARGET_HEIGHT * PREVIEW_SCALE}
-          text={text}
           imageUrl={imageUrl}
           imageStyle={{
             width: width * PREVIEW_SCALE,
