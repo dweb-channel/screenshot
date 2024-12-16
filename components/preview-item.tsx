@@ -1,9 +1,8 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import * as htmlToImage from "html-to-image";
 import { IPhoneFrame } from "./ui/iphone-frame";
-import { createRoot } from "react-dom/client";
 
 // 定义常量
 export const TARGET_WIDTH = 1320;
@@ -73,12 +72,10 @@ export default function PreviewItem({
   onImageReplace,
 }: PreviewItemProps) {
   const previewRef = useRef<HTMLDivElement>(null);
-
   const { width, height, x, y } = calculateImagePosition(
     originalWidth,
     originalHeight
   );
-
   // 生成并下载当前图片
   const handleDownload = async () => {
     if (!previewRef.current) return;
@@ -109,7 +106,7 @@ export default function PreviewItem({
 
   return (
     <div className="space-y-4 flex flex-col items-center p-4">
-      {text && (
+      <div ref={previewRef} className="relative w-full h-full m-4">
         <div
           style={{
             width: "100%",
@@ -118,26 +115,17 @@ export default function PreviewItem({
         >
           <h1
             style={{
-              fontSize: "40px",
+              fontSize: "35px",
               fontWeight: "bold",
               color: "black",
               margin: 0,
               fontFamily: "system-ui,-apple-system",
+              whiteSpace: "pre-wrap", // 允许换行
             }}
           >
-            {text}
+            {text.match(/.{1,4}/g)?.join("\n") || text}
           </h1>
         </div>
-      )}
-      {/* iPhone 预览框 */}
-      <div
-        ref={previewRef}
-        style={{
-          width: TARGET_WIDTH * PREVIEW_SCALE,
-          height: TARGET_HEIGHT * PREVIEW_SCALE,
-        }}
-        className="relative w-full h-full"
-      >
         <IPhoneFrame
           width={TARGET_WIDTH * PREVIEW_SCALE}
           height={TARGET_HEIGHT * PREVIEW_SCALE}
@@ -152,7 +140,7 @@ export default function PreviewItem({
       </div>
 
       {/* 控制区域 */}
-      <div className="space-y-2 w-full max-w-[330px]">
+      <div className="space-y-2 w-full max-w-[330px] relative">
         <textarea
           className="w-full p-2 border rounded-lg resize-none"
           rows={2}

@@ -24,7 +24,6 @@ interface IPhoneFrameProps {
 export const IPhoneFrame: React.FC<IPhoneFrameProps> = ({
   width,
   height,
-  text,
   imageUrl,
   imageStyle,
 }) => {
