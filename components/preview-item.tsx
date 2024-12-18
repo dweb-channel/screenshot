@@ -62,6 +62,35 @@ const getImageDimensions = (
   });
 };
 
+const imageHalfScale = (imageUrl: string) => {
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+
+  img.onload = () => {
+    const canvas = document.createElement("canvas");
+
+    const ctx = canvas.getContext("2d");
+    canvas.width = img.width / 2;
+    canvas.height = img.height / 2;
+
+    ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.download = "screenshot.png";
+        link.href = url;
+        link.click();
+
+        URL.revokeObjectURL(url);
+      }
+    });
+  };
+
+  img.src = imageUrl;
+};
+
 export default function PreviewItem({
   id,
   imageUrl,
@@ -89,16 +118,13 @@ export default function PreviewItem({
         skipAutoScale: true,
         backgroundColor: "#ffffff",
         style: {
-          transform: `scale(${1 / PREVIEW_SCALE})`, // 反向缩放以获得原始大小
+          transform: `scale(3.55)`, // 反向缩放以获得原始大小
           transformOrigin: "top left",
         },
       });
 
       // 下载图片
-      const link = document.createElement("a");
-      link.download = "screenshot.png";
-      link.href = dataUrl;
-      link.click();
+      imageHalfScale(dataUrl);
     } catch (error) {
       console.error("生成图片失败:", error);
     }
@@ -115,7 +141,7 @@ export default function PreviewItem({
         >
           <h1
             style={{
-              fontSize: "35px",
+              fontSize: "25px",
               fontWeight: "bold",
               color: "black",
               margin: 0,
