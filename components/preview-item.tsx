@@ -7,7 +7,7 @@ import { IPhoneFrame } from "./ui/iphone-frame";
 // 定义常量
 export const TARGET_WIDTH = 1320;
 export const TARGET_HEIGHT = 2868;
-export const PREVIEW_SCALE = 0.25;
+export const PREVIEW_SCALE = 0.2; // 将预览比例从 0.25 调整为 0.2，使手机显示更小
 
 interface PreviewItemProps {
   id: string;
@@ -29,26 +29,34 @@ const calculateImagePosition = (
   originalWidth: number,
   originalHeight: number
 ) => {
-  const targetRatio = TARGET_WIDTH / TARGET_HEIGHT;
+  // 考虑边框宽度
+  const BORDER_WIDTH = 12;
+  const contentWidth = TARGET_WIDTH - BORDER_WIDTH * 2;
+  const contentHeight = TARGET_HEIGHT - BORDER_WIDTH * 2;
+
+  const targetRatio = contentWidth / contentHeight;
   const imageRatio = originalWidth / originalHeight;
 
-  let width, height, x, y;
+  let width, height;
 
   if (imageRatio > targetRatio) {
-    height = TARGET_HEIGHT;
+    // 图片更宽
+    height = contentHeight;
     width = height * imageRatio;
-    x = -(width - TARGET_WIDTH) / 2;
-    y = 0;
   } else {
-    width = TARGET_WIDTH;
+    // 图片更高
+    width = contentWidth;
     height = width / imageRatio;
-    x = 0;
-    y = -(height - TARGET_HEIGHT) / 2;
   }
+
+  // 计算偏移量，使图片中心对齐到截图中心
+  const centerX = TARGET_WIDTH / 2;
+  const centerY = TARGET_HEIGHT / 2;
+  const x = centerX - (width / 2);
+  const y = centerY - (height / 2);
 
   return { width, height, x, y };
 };
-
 // 获取图片的原始尺寸
 const getImageDimensions = (
   url: string
@@ -68,24 +76,45 @@ const imageHalfScale = (imageUrl: string) => {
 
   img.onload = () => {
     const canvas = document.createElement("canvas");
-
     const ctx = canvas.getContext("2d");
-    canvas.width = img.width / 2;
-    canvas.height = img.height / 2;
 
-    ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+    // 设置画布大小为目标尺寸
+    canvas.width = TARGET_WIDTH;
+    canvas.height = TARGET_HEIGHT;
 
-    canvas.toBlob((blob) => {
-      if (blob) {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.download = "screenshot.png";
-        link.href = url;
-        link.click();
+    if (ctx) {
+      // 填充白色背景
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        URL.revokeObjectURL(url);
-      }
-    });
+      // 计算图片位置和尺寸
+      const { width, height, x, y } = calculateImagePosition(img.width, img.height);
+      
+      // 使用整数值进行绘制，避免小数点导致的模糊或偏移
+      ctx.drawImage(
+        img,
+        Math.round(x),
+        Math.round(y),
+        Math.round(width),
+        Math.round(height)
+      );
+    }
+
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.download = "screenshot.png";
+          link.href = url;
+          link.click();
+
+          URL.revokeObjectURL(url);
+        }
+      },
+      "image/png",
+      1.0
+    );
   };
 
   img.src = imageUrl;
@@ -118,8 +147,8 @@ export default function PreviewItem({
         skipAutoScale: true,
         backgroundColor: "#ffffff",
         style: {
-          transform: `scale(3.55)`, // 反向缩放以获得原始大小
-          transformOrigin: "top left",
+          transform: `translate(200%, ${y}px) scale(${0.8 / PREVIEW_SCALE})`, // 使用计算出的偏移
+          transformOrigin: "center center",
         },
       });
 
@@ -132,21 +161,36 @@ export default function PreviewItem({
 
   return (
     <div className="space-y-4 flex flex-col items-center p-4">
-      <div ref={previewRef} className="relative w-full h-full m-4">
+      <div 
+        ref={previewRef} 
+        className="relative w-full h-full flex flex-col items-center justify-center"
+        style={{
+          margin: "0 auto",
+          maxWidth: `${TARGET_WIDTH * PREVIEW_SCALE}px`,
+          minHeight: `${TARGET_HEIGHT * PREVIEW_SCALE}px`,
+          transform: `translate(${x * PREVIEW_SCALE}px, ${y * PREVIEW_SCALE}px)`, // 预览时也使用相同的偏移
+        }}
+      >
         <div
           style={{
             width: "100%",
             textAlign: "center",
+            padding: "20px",
           }}
         >
           <h1
             style={{
-              fontSize: "25px",
-              fontWeight: "bold",
-              color: "black",
-              margin: 0,
-              fontFamily: "system-ui,-apple-system",
-              whiteSpace: "pre-wrap", // 允许换行
+              fontSize: "28px", // 增大字号
+              fontWeight: "600",
+              color: "#1a1a1a", // 更柔和的黑色
+              margin: "0 auto",
+              fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+              whiteSpace: "pre-wrap",
+              lineHeight: 1.4, // 增加行高
+              letterSpacing: "-0.02em", // 略微调整字间距
+              textAlign: "center",
+              maxWidth: "800px", // 限制最大宽度
+              wordBreak: "break-word", // 防止文字溢出
             }}
           >
             {text.match(/.{1,4}/g)?.join("\n") || text}

@@ -28,7 +28,7 @@ export const IPhoneFrame: React.FC<IPhoneFrameProps> = ({
   imageStyle,
 }) => {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <div className='flex items-center justify-center' style={{ flexDirection: 'column' }}>
       {/* iPhone 边框部分 */}
       <div
         style={{
