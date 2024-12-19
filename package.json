@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack",
     "start": "next start",
     "lint": "next lint",
-    "build": "next build && echo > out/.nojekyll && gh-pages -d out"
+    "build": "next build && echo > out/.nojekyll"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.1",
